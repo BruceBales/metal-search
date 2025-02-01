@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/brucebales/metal-search/models"
 	"golang.org/x/net/html"
@@ -115,51 +117,63 @@ func extractData(url string) (string, string, string, string, string, string, st
 					label = z.Token().Data
 				}
 			}
-
 		}
 	}
 }
 
 func main() {
 
-	numBands := 5
+	numBands := 40
 
-	bands := []models.Band{}
+	batchSize := 10
+	batchCount := numBands / batchSize
 
-	for i := 1; i <= numBands; i++ {
-		url := fmt.Sprintf("https://www.metal-archives.com/bands/scrape/%d", i)
-		name, genre, country, location, status, formedIn, themes, yearsActive, label, err := extractData(url)
+	currentIndex := 1
+
+	for i := 0; i < batchCount; i++ {
+		bands := []models.Band{}
+		for j := currentIndex; j <= currentIndex+batchSize; j++ {
+			fmt.Print("Scraping band: ", j, "\n")
+			url := fmt.Sprintf("https://www.metal-archives.com/bands/scrape/%d", j)
+			name, genre, country, location, status, formedIn, themes, yearsActive, label, err := extractData(url)
+			if err != nil {
+				fmt.Printf("Failed to extract data: %v\n", err)
+				continue
+			}
+
+			band := models.Band{}
+
+			band.ID = j
+			band.Name = name
+			band.Genre = genre
+			band.Country = country
+			band.Location = location
+			band.Status = status
+			band.FormedIn, err = strconv.Atoi(formedIn)
+			band.YearsActive = yearsActive
+			band.Label = label
+			if err != nil {
+				fmt.Printf("Failed to convert formedIn to int: %v\n", err)
+				continue
+			}
+			band.Themes = themes
+
+			fmt.Printf("Band: %v\n", band)
+
+			bands = append(bands, band)
+
+			time.Sleep(1 * time.Second)
+
+		}
+		currentIndex += batchSize
+		fmt.Println("Writing bands to file")
+		bandsJSON, err := json.Marshal(bands)
 		if err != nil {
-			fmt.Printf("Failed to extract data: %v\n", err)
-			continue
+			fmt.Printf("Failed to marshal bands: %v\n", err)
 		}
 
-		band := models.Band{}
-
-		band.ID = i
-		band.Name = name
-		band.Genre = genre
-		band.Country = country
-		band.Location = location
-		band.Status = status
-		band.FormedIn, err = strconv.Atoi(formedIn)
-		band.YearsActive = yearsActive
-		band.Label = label
-		if err != nil {
-			fmt.Printf("Failed to convert formedIn to int: %v\n", err)
-			continue
-		}
-		band.Themes = themes
-
-		bands = append(bands, band)
+		os.WriteFile(fmt.Sprintf("data/bands-%d.json", i), bandsJSON, 0644)
 
 	}
-
-	bandsJSON, err := json.Marshal(bands)
-	if err != nil {
-		fmt.Printf("Failed to marshal bands: %v\n", err)
-	}
-
-	fmt.Println(string(bandsJSON))
 
 }
