@@ -169,9 +169,9 @@ func getSpotifyURL(url string) (string, error) {
 
 func main() {
 
-	numBands := 10
+	numBands := 1000
 
-	batchSize := 10
+	batchSize := 100
 	batchCount := numBands / batchSize
 
 	currentIndex := 1
