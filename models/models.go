@@ -13,6 +13,11 @@ type Band struct {
 	Label       string  `json:"label"`
 	BandCover   string  `json:"band_cover"`
 	Albums      []Album `json:"albums"`
+	Links       string  `json:"links"`
+}
+
+type Links struct {
+	Spotify string `json:"spotify"`
 }
 
 type Album struct {

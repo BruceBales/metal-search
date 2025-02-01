@@ -11,32 +11,32 @@ import (
 )
 
 // Extract data from a given URL
-func extractData(url string) (string, string, string, string, string, string, error) {
+func extractData(url string) (string, string, string, string, string, string, string, string, string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", "", "", "", "", "", fmt.Errorf("failed to create request: %v", err)
+		return "", "", "", "", "", "", "", "", "", fmt.Errorf("failed to create request: %v", err)
 	}
 	req.Header.Set("User-Agent", "MyCustomUserAgent/1.0")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", "", "", "", "", "", fmt.Errorf("failed to send request: %v", err)
+		return "", "", "", "", "", "", "", "", "", fmt.Errorf("failed to send request: %v", err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", "", "", "", "", "", fmt.Errorf("error: status code %d", resp.StatusCode)
+		return "", "", "", "", "", "", "", "", "", fmt.Errorf("error: status code %d", resp.StatusCode)
 	}
 
-	var name, genre, location, status, formedIn, themes string
+	var name, genre, country, location, status, formedIn, themes, yearsActive, label string
 	z := html.NewTokenizer(resp.Body)
 	for {
 		tt := z.Next()
 		switch tt {
 		case html.ErrorToken:
-			return name, genre, location, status, formedIn, themes, nil
+			return name, genre, country, location, status, formedIn, themes, yearsActive, label, nil
 		case html.StartTagToken, html.SelfClosingTagToken:
 			t := z.Token()
 
@@ -49,7 +49,6 @@ func extractData(url string) (string, string, string, string, string, string, er
 					}
 				}
 			}
-
 			if t.Data == "dt" {
 				z.Next()
 				if string(z.Raw()) == "Location:" {
@@ -91,6 +90,31 @@ func extractData(url string) (string, string, string, string, string, string, er
 					themes = z.Token().Data
 				}
 			}
+			if t.Data == "dt" {
+				if string(z.Raw()) == "Country of origin:" {
+					for i := 0; i < 5; i++ {
+						z.Next()
+					}
+					country = z.Token().Data
+				}
+			}
+			if t.Data == "dt" {
+				if string(z.Raw()) == "Years active:" {
+					for i := 0; i < 4; i++ {
+						z.Next()
+					}
+					// Years active is currently not readable. I will add a parsing function for it later
+					yearsActive = "N/A"
+				}
+			}
+			if t.Data == "dt" {
+				if string(z.Raw()) == "Current label:" {
+					for i := 0; i < 4; i++ {
+						z.Next()
+					}
+					label = z.Token().Data
+				}
+			}
 
 		}
 	}
@@ -98,13 +122,13 @@ func extractData(url string) (string, string, string, string, string, string, er
 
 func main() {
 
-	numBands := 20
+	numBands := 5
 
 	bands := []models.Band{}
 
 	for i := 1; i <= numBands; i++ {
 		url := fmt.Sprintf("https://www.metal-archives.com/bands/scrape/%d", i)
-		name, genre, location, status, formedIn, themes, err := extractData(url)
+		name, genre, country, location, status, formedIn, themes, yearsActive, label, err := extractData(url)
 		if err != nil {
 			fmt.Printf("Failed to extract data: %v\n", err)
 			continue
@@ -115,9 +139,12 @@ func main() {
 		band.ID = i
 		band.Name = name
 		band.Genre = genre
+		band.Country = country
 		band.Location = location
 		band.Status = status
 		band.FormedIn, err = strconv.Atoi(formedIn)
+		band.YearsActive = yearsActive
+		band.Label = label
 		if err != nil {
 			fmt.Printf("Failed to convert formedIn to int: %v\n", err)
 			continue
