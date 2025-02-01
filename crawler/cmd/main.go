@@ -121,9 +121,55 @@ func extractData(url string) (string, string, string, string, string, string, st
 	}
 }
 
+func getSpotifyURL(url string) (string, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("User-Agent", "MyCustomUserAgent/1.0")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error: status code %d", resp.StatusCode)
+	}
+
+	var spotifyURL string
+	z := html.NewTokenizer(resp.Body)
+	for {
+		tt := z.Next()
+		switch tt {
+		case html.ErrorToken:
+			return spotifyURL, err
+		case html.StartTagToken, html.SelfClosingTagToken:
+			t := z.Token()
+			if t.Data == "a" {
+				for _, a := range t.Attr {
+					if a.Key == "title" && a.Val == "Go to: Spotify" {
+						fmt.Println(t)
+						for _, a := range t.Attr {
+							if a.Key == "href" {
+								fmt.Println("Spotify URL: ", a.Val)
+								spotifyURL = a.Val
+								return spotifyURL, nil
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func main() {
 
-	numBands := 40
+	numBands := 10
 
 	batchSize := 10
 	batchCount := numBands / batchSize
@@ -141,8 +187,17 @@ func main() {
 				continue
 			}
 
+			spotifyURL, err := getSpotifyURL(fmt.Sprintf("https://www.metal-archives.com/link/ajax-list/type/band/id/%d", j))
+			if err != nil {
+				fmt.Printf("Failed to get Spotify URL: %v\n", err)
+			}
 			band := models.Band{}
 
+			// fmt.Println("Spotify URL: ", spotifyURL)
+
+			if spotifyURL != "" {
+				band.Links.Spotify = spotifyURL
+			}
 			band.ID = j
 			band.Name = name
 			band.Genre = genre
