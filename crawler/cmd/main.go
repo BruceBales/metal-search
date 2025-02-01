@@ -1,177 +1,30 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"io/ioutil"
 	"os"
+	"os/user"
+	"path/filepath"
 	"strconv"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/brucebales/metal-search/crawler/helpers"
 	"github.com/brucebales/metal-search/models"
-	"golang.org/x/net/html"
 )
-
-// Extract data from a given URL
-func extractData(url string) (string, string, string, string, string, string, string, string, string, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", "", "", "", "", "", "", "", "", fmt.Errorf("failed to create request: %v", err)
-	}
-	req.Header.Set("User-Agent", "MyCustomUserAgent/1.0")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", "", "", "", "", "", "", "", "", fmt.Errorf("failed to send request: %v", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", "", "", "", "", "", "", "", "", fmt.Errorf("error: status code %d", resp.StatusCode)
-	}
-
-	var name, genre, country, location, status, formedIn, themes, yearsActive, label string
-	z := html.NewTokenizer(resp.Body)
-	for {
-		tt := z.Next()
-		switch tt {
-		case html.ErrorToken:
-			return name, genre, country, location, status, formedIn, themes, yearsActive, label, nil
-		case html.StartTagToken, html.SelfClosingTagToken:
-			t := z.Token()
-
-			if t.Data == "h1" {
-				for _, a := range t.Attr {
-					if a.Key == "class" && a.Val == "band_name" {
-						z.Next()
-						z.Next()
-						name = z.Token().Data
-					}
-				}
-			}
-			if t.Data == "dt" {
-				z.Next()
-				if string(z.Raw()) == "Location:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					location = z.Token().Data
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Genre:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					genre = z.Token().Data
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Status:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					status = z.Token().Data
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Formed in:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					formedIn = z.Token().Data
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Themes:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					themes = z.Token().Data
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Country of origin:" {
-					for i := 0; i < 5; i++ {
-						z.Next()
-					}
-					country = z.Token().Data
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Years active:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					// Years active is currently not readable. I will add a parsing function for it later
-					yearsActive = "N/A"
-				}
-			}
-			if t.Data == "dt" {
-				if string(z.Raw()) == "Current label:" {
-					for i := 0; i < 4; i++ {
-						z.Next()
-					}
-					label = z.Token().Data
-				}
-			}
-		}
-	}
-}
-
-func getSpotifyURL(url string) (string, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %v", err)
-	}
-	req.Header.Set("User-Agent", "MyCustomUserAgent/1.0")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send request: %v", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error: status code %d", resp.StatusCode)
-	}
-
-	var spotifyURL string
-	z := html.NewTokenizer(resp.Body)
-	for {
-		tt := z.Next()
-		switch tt {
-		case html.ErrorToken:
-			return spotifyURL, err
-		case html.StartTagToken, html.SelfClosingTagToken:
-			t := z.Token()
-			if t.Data == "a" {
-				for _, a := range t.Attr {
-					if a.Key == "title" && a.Val == "Go to: Spotify" {
-						fmt.Println(t)
-						for _, a := range t.Attr {
-							if a.Key == "href" {
-								fmt.Println("Spotify URL: ", a.Val)
-								spotifyURL = a.Val
-								return spotifyURL, nil
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
 
 func main() {
 
-	numBands := 1000
+	numBands := 100
 
-	batchSize := 100
+	batchSize := 10
 	batchCount := numBands / batchSize
 
 	currentIndex := 1
@@ -181,13 +34,13 @@ func main() {
 		for j := currentIndex; j <= currentIndex+batchSize; j++ {
 			fmt.Print("Scraping band: ", j, "\n")
 			url := fmt.Sprintf("https://www.metal-archives.com/bands/scrape/%d", j)
-			name, genre, country, location, status, formedIn, themes, yearsActive, label, err := extractData(url)
+			name, genre, country, location, status, formedIn, themes, yearsActive, label, err := helpers.ExtractData(url)
 			if err != nil {
 				fmt.Printf("Failed to extract data: %v\n", err)
 				continue
 			}
 
-			spotifyURL, err := getSpotifyURL(fmt.Sprintf("https://www.metal-archives.com/link/ajax-list/type/band/id/%d", j))
+			spotifyURL, err := helpers.GetSpotifyURL(fmt.Sprintf("https://www.metal-archives.com/link/ajax-list/type/band/id/%d", j))
 			if err != nil {
 				fmt.Printf("Failed to get Spotify URL: %v\n", err)
 			}
@@ -196,7 +49,7 @@ func main() {
 			// fmt.Println("Spotify URL: ", spotifyURL)
 
 			if spotifyURL != "" {
-				band.Links.Spotify = spotifyURL
+				band.SpotifyLink = spotifyURL
 			}
 			band.ID = j
 			band.Name = name
@@ -213,22 +66,99 @@ func main() {
 			}
 			band.Themes = themes
 
-			fmt.Printf("Band: %v\n", band)
-
 			bands = append(bands, band)
 
 			time.Sleep(1 * time.Second)
 
 		}
 		currentIndex += batchSize
-		fmt.Println("Writing bands to file")
 		bandsJSON, err := json.Marshal(bands)
 		if err != nil {
 			fmt.Printf("Failed to marshal bands: %v\n", err)
 		}
 
-		os.WriteFile(fmt.Sprintf("data/bands-%d.json", i), bandsJSON, 0644)
+		err = writeToMysql(bandsJSON)
+		if err != nil {
+			fmt.Printf("Failed to write to MySQL: %v\n", err)
+		}
 
 	}
 
+}
+
+func writeToMysql(bandsJSON []byte) error {
+	// Load the CA certificate
+	rootCertPool := x509.NewCertPool()
+
+	usr, err := user.Current()
+	if err != nil {
+		fmt.Println("Error getting current user:", err)
+		return err
+	}
+
+	filePath := filepath.Join(usr.HomeDir, "metal-cert.crt")
+
+	pem, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read CA cert file: %v", err)
+	}
+	if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+		return fmt.Errorf("failed to append CA cert to pool")
+	}
+
+	// Register the TLS configuration
+	err = mysql.RegisterTLSConfig("custom", &tls.Config{
+		RootCAs: rootCertPool,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to register TLS config: %v", err)
+	}
+
+	// Read environment variables
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+
+	// Construct the DSN
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb?tls=custom", dbUser, dbPassword, dbHost, dbPort)
+
+	// Open a connection to the MySQL database
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return fmt.Errorf("failed to open MySQL connection: %v", err)
+	}
+	defer db.Close()
+
+	// Parse the JSON data
+	var bands []models.Band
+	err = json.Unmarshal(bandsJSON, &bands)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal bands JSON: %v", err)
+	}
+
+	// Insert the data into the bands table
+	for _, band := range bands {
+		_, err := db.Exec(`
+            INSERT INTO bands (id, name, country, location, formed_in, status, years_active, genre, themes, label, band_cover, spotify_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            name = VALUES(name),
+            country = VALUES(country),
+            location = VALUES(location),
+            formed_in = VALUES(formed_in),
+            status = VALUES(status),
+            years_active = VALUES(years_active),
+            genre = VALUES(genre),
+            themes = VALUES(themes),
+            label = VALUES(label),
+            band_cover = VALUES(band_cover),
+            spotify_link = VALUES(spotify_link)
+        `, band.ID, band.Name, band.Country, band.Location, band.FormedIn, band.Status, band.YearsActive, band.Genre, band.Themes, band.Label, band.BandCover, band.SpotifyLink)
+		if err != nil {
+			return fmt.Errorf("failed to insert band into MySQL: %v", err)
+		}
+	}
+
+	return nil
 }
