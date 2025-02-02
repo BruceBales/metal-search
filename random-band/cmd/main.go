@@ -82,9 +82,33 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
         <html>
         <head>
             <title>Random Metal Band</title>
+			<style>
+				body {
+					background-color: black;
+					color: lightgrey;
+					font-family: Arial, sans-serif;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					height: 100vh;
+					margin: 0;
+				}
+                select, input[type="submit"] {
+                    background-color: #333;
+                    color: lightgrey;
+                    border: 1px solid lightgrey;
+                    padding: 5px;
+                    margin: 5px;
+                }
+                select {
+                    width: 200px;
+                }
+            </style>
         </head>
         <body>
+			<div class="container">
             <h1>Random Metal Band</h1>
+			<br>
             <form action="/randomBand" method="get">
                 <label for="genre">Genre:</label>
                 <select id="genre" name="genre">
@@ -108,6 +132,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
                 </select><br><br>
                 <input type="submit" value="Get Random Band">
             </form>
+			</div>
         </body>
         </html>
     `)
@@ -202,15 +227,46 @@ func randomBandHandler(w http.ResponseWriter, r *http.Request) {
 	if spotifyLink == "" {
 		fmt.Fprintln(w, "No bands found.")
 	} else {
-		fmt.Fprintln(w, `<head><meta charset="UTF-8"></head>`)
-		fmt.Fprintln(w, `<a href="/">Home</a><br>`)
-		fmt.Fprintln(w, "<b>Band Name: </b> "+name+"<br>")
-		fmt.Fprintln(w, "<b>Country: </b>"+countryResult+"<br>")
-		fmt.Fprintln(w, "<b>Region: </b>"+location+"<br>")
-		fmt.Fprintln(w, "<b>Genre: </b>"+genreResult+"<br>")
-		fmt.Fprintln(w, "<br><b>Links: </b>")
-		fmt.Fprintf(w, "<br><a href=\"%s\">Spotify Link</a>", spotifyLink)
-		fmt.Fprintf(w, "<br><a href=\"%s\">Metal-Archives Link</a>", metalArchivesLink)
+		fmt.Fprintf(w, `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Random Band</title>
+                <style>
+                    body {
+                        background-color: black;
+                        color: lightgrey;
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .container {
+                        text-align: left;
+                        width: 400px; /* Fixed width for the container */
+                    }
+                    a {
+                        color: grey;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+					<a href="/">Home</a><br>
+                    <p><strong>Band Name:</strong> %s</p>
+                    <p><strong>Country:</strong> %s</p>
+                    <p><strong>Location:</strong> %s</p>
+                    <p><strong>Genre:</strong> %s</p>
+					<p><string>Links:</strong></p>
+                    <a href="%s">Spotify</a></p>
+					<a href="%s">Metal Archives</a></p>
+                </div>
+            </body>
+            </html>
+        `, name, countryResult, location, genreResult, spotifyLink, metalArchivesLink)
 
 	}
 }
