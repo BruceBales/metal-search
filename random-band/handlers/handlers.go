@@ -246,6 +246,11 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
                         text-align: left;
                         width: 400px; /* Fixed width for the container */
                     }
+					.links {
+                        display: flex;
+                        justify-content: space-between;
+                    }
+
                     a {
                         color: grey;
                     }
@@ -253,7 +258,10 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
             </head>
             <body>
                 <div class="container">
-					<a href="/">Home</a><br>
+					<div class="links">
+                        <a href="/">Home</a>
+                        <a href="javascript:location.reload()">Refresh</a>
+                    </div>
                     <p><strong>Band Name:</strong> %s</p>
                     <p><strong>Country:</strong> %s</p>
                     <p><strong>Location:</strong> %s</p>
