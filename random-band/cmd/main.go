@@ -19,7 +19,12 @@ import (
 func main() {
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/randomBand", randomBandHandler)
-	log.Fatal(http.ListenAndServe(":80", nil))
+	if os.Getenv("TLS_ENABLED") == "true" {
+		log.Fatal(http.ListenAndServeTLS(":443", os.Getenv("TLS_CERT_PATH"), os.Getenv("TLS_KEY_PATH"), nil))
+	} else {
+		log.Fatal(http.ListenAndServe(":80", nil))
+
+	}
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
