@@ -6,7 +6,7 @@ import (
 )
 
 func GetDistinctValues(db *sql.DB, column string) ([]string, error) {
-	query := fmt.Sprintf("SELECT DISTINCT %s FROM bands WHERE %s IS NOT NULL AND %s != '' ORDER BY %s", column, column, column, column)
+	query := fmt.Sprintf("SELECT DISTINCT %s FROM bands WHERE %s IS NOT NULL AND %s != '' AND spotify_link != '' ORDER BY %s", column, column, column, column)
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
