@@ -108,11 +108,15 @@ func Home(w http.ResponseWriter, r *http.Request) {
                 <select id="genre" name="genre">
                     <option value="">Any</option>
                     <option value="%%Progressive%%">Progressive Metal</option>
+					<option value="%%Thrash Metal%%">Thrash Metal</option>
                     <option value="%%Death Metal%%">Death Metal</option>
 					<option value="%%Melodic Death Metal%%">Melodic Death Metal</option>
+					<option value="%%Technical Death Metal%%">Technical Death Metal</option>
                     <option value="%%Black Metal%%">Black Metal</option>
+					<option value="%%Melodic Black Metal%%">Melodic Black Metal</option>
 					<option value="%%Folk Metal%%">Folk Metal</option>
                     <option value="%%Power Metal%%">Power Metal</option>
+                    <option value="%%Doom Metal%%">Doom Metal</option>
                     <!-- Add more genres as needed -->
                 </select><br><br>
                 <label for="country">Country:</label>
