@@ -210,8 +210,40 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(query, args...).Scan(&id, &spotifyLink, &name, &countryResult, &location, &genreResult)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Fprintln(w, `<a href="/">Home</a><br>`)
-			fmt.Fprintln(w, "No bands found.")
+			fmt.Fprintln(w, `
+			<head>
+            <title>Random Metal Band</title>
+                <style>
+                    body {
+                        background-color: black;
+                        color: lightgrey;
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .container {
+                        text-align: left;
+                        width: 400px; /* Fixed width for the container */
+                    }
+					.links {
+                        display: flex;
+                        justify-content: space-between;
+                    }
+
+                    a {
+                        color: grey;
+                    }
+                </style>
+			</head>`)
+			fmt.Fprintln(w, `
+			<div class="container">
+				<a href="/">Home</a><br>
+				<br>No bands found.
+			</div>
+			`)
 			return
 		}
 		http.Error(w, fmt.Sprintf("Failed to query database: %v", err), http.StatusInternalServerError)
