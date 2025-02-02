@@ -109,7 +109,7 @@ func randomBandHandler(w http.ResponseWriter, r *http.Request) {
 	args := []any{}
 
 	// Construct the query
-	query := "SELECT spotify_link, name, country, location, genre FROM bands WHERE spotify_link != ''"
+	query := "SELECT id, spotify_link, name, country, location, genre FROM bands WHERE spotify_link != ''"
 	if genre != "" {
 		query += " AND genre = ?"
 		args = append(args, genre)
@@ -121,18 +121,22 @@ func randomBandHandler(w http.ResponseWriter, r *http.Request) {
 	query += " ORDER BY RAND() LIMIT 1"
 
 	var spotifyLink string
+
+	var id int
 	var name string
 	var countryResult string
 	var location string
 	var genreResult string
 
-	err = db.QueryRow(query, args...).Scan(&spotifyLink, &name, &countryResult, &location, &genreResult)
+	err = db.QueryRow(query, args...).Scan(&id, &spotifyLink, &name, &countryResult, &location, &genreResult)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to query database: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html")
+
+	metalArchivesLink := fmt.Sprintf("https://www.metal-archives.com/bands/%s/%d", name, id)
 
 	if spotifyLink == "" {
 		fmt.Fprintln(w, "No bands found in the database.")
@@ -143,6 +147,9 @@ func randomBandHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "<b>Country: </b>"+countryResult+"<br>")
 		fmt.Fprintln(w, "<b>Region: </b>"+location+"<br>")
 		fmt.Fprintln(w, "<b>Genre: </b>"+genreResult+"<br>")
-		fmt.Fprintf(w, "<a href=\"%s\">Spotify Link</a>", spotifyLink)
+		fmt.Fprintln(w, "<br><b>Links: </b>")
+		fmt.Fprintf(w, "<br><a href=\"%s\">Spotify Link</a>", spotifyLink)
+		fmt.Fprintf(w, "<br><a href=\"%s\">Metal-Archives Link</a>", metalArchivesLink)
+
 	}
 }
