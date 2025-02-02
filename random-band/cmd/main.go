@@ -89,12 +89,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
                 <label for="genre">Genre:</label>
                 <select id="genre" name="genre">
                     <option value="">Any</option>
-                    <option value="Progressive Metal">Progressive Metal</option>
-                    <option value="Death Metal">Death Metal</option>
-					<option value="Death Metal">Melodic Death Metal</option>
-                    <option value="Black Metal">Black Metal</option>
-					<option value="Folk Metal">Folk Metal</option>
-                    <option value="Power Metal">Power Metal</option>
+                    <option value="%%Progressive%%">Progressive Metal</option>
+                    <option value="%%Death Metal%%">Death Metal</option>
+					<option value="%%Melodic Death Metal%%">Melodic Death Metal</option>
+                    <option value="%%Black Metal%%">Black Metal</option>
+					<option value="%%Folk Metal%%">Folk Metal</option>
+                    <option value="%%Power Metal%%">Power Metal</option>
                     <!-- Add more genres as needed -->
                 </select><br><br>
                 <label for="country">Country:</label>
@@ -167,7 +167,7 @@ func randomBandHandler(w http.ResponseWriter, r *http.Request) {
 	// Construct the query
 	query := "SELECT id, spotify_link, name, country, location, genre FROM bands WHERE spotify_link != ''"
 	if genre != "" {
-		query += " AND genre = ?"
+		query += " AND genre like ?"
 		args = append(args, genre)
 	}
 	if country != "" {
