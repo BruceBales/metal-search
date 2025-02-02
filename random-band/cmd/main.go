@@ -81,10 +81,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Random Band</title>
+            <title>Random Metal Band</title>
         </head>
         <body>
-            <h1>Welcome to the Random Band Page</h1>
+            <h1>Random Metal Band</h1>
             <form action="/randomBand" method="get">
                 <label for="genre">Genre:</label>
                 <select id="genre" name="genre">
