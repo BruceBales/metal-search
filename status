@@ -1,0 +1,16 @@
+Scraping band: 85501
+Failed to get Spotify URL: error: status code 404
+Failed to convert formedIn to int: strconv.Atoi: parsing "": invalid syntax
+Scraping band: 85501
+Failed to get Spotify URL: error: status code 404
+Failed to convert formedIn to int: strconv.Atoi: parsing "": invalid syntax
+Scraping band: 85502
+Failed to get Spotify URL: error: status code 404
+Failed to convert formedIn to int: strconv.Atoi: parsing "": invalid syntax
+Scraping band: 85503
+Failed to get Spotify URL: error: status code 404
+Failed to convert formedIn to int: strconv.Atoi: parsing "": invalid syntax
+Scraping band: 85504
+Failed to get Spotify URL: error: status code 404
+Failed to convert formedIn to int: strconv.Atoi: parsing "": invalid syntax
+Scraping band: 85505
