@@ -16,10 +16,6 @@ type Band struct {
 	SpotifyLink string  `json:"links"`
 }
 
-type Links struct {
-	Spotify string `json:"spotify"`
-}
-
 type Album struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
