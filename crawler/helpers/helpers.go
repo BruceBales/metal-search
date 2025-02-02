@@ -3,6 +3,7 @@ package helpers
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -16,6 +17,12 @@ func ExtractData(url string) (string, string, string, string, string, string, st
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+	if resp.StatusCode == http.StatusTooManyRequests {
+		fmt.Println("!!! RATE LIMITED !!!")
+		fmt.Println("Backing off for 5 seconds")
+		time.Sleep(5 * time.Second)
+		return ExtractData(url)
+	}
 	if err != nil {
 		return "", "", "", "", "", "", "", "", "", fmt.Errorf("failed to send request: %v", err)
 	}
@@ -124,6 +131,9 @@ func GetSpotifyURL(url string) (string, error) {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+	if resp.StatusCode == http.StatusNotFound {
+		return "", nil
+	}
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %v", err)
 	}

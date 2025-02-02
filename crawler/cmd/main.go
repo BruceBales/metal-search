@@ -48,21 +48,13 @@ func main() {
 			url := fmt.Sprintf("https://www.metal-archives.com/bands/scrape/%d", j)
 			name, genre, country, location, status, formedIn, themes, yearsActive, label, err := helpers.ExtractData(url)
 			if err != nil {
-				if err.Error() == "status code 429" {
-					fmt.Println("!!! RATE LIMITED !!!")
-					fmt.Println("Backing off for 5 seconds")
-					time.Sleep(5 * time.Second)
-				} else {
-					fmt.Printf("Failed to extract data: %v\n", err)
-				}
+				fmt.Printf("Failed to extract data: %v\n", err)
 				continue
 			}
 
 			spotifyURL, err := helpers.GetSpotifyURL(fmt.Sprintf("https://www.metal-archives.com/link/ajax-list/type/band/id/%d", j))
 			if err != nil {
-				if err.Error() != "status code 404" {
-					fmt.Printf("Failed to get Spotify URL: %v\n", err)
-				}
+				fmt.Printf("Failed to get Spotify URL: %v\n", err)
 			}
 			band := models.Band{}
 
