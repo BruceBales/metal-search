@@ -105,7 +105,7 @@ func ExtractData(url string) (string, string, string, string, string, string, st
 			}
 			if t.Data == "dt" {
 				if string(z.Raw()) == "Current label:" {
-					for i := 0; i < 4; i++ {
+					for i := 0; i < 5; i++ {
 						z.Next()
 					}
 					label = z.Token().Data

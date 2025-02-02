@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -22,7 +21,7 @@ import (
 
 func main() {
 
-	numBands := 100
+	numBands := 3540558574
 
 	batchSize := 10
 	batchCount := numBands / batchSize
@@ -72,12 +71,8 @@ func main() {
 
 		}
 		currentIndex += batchSize
-		bandsJSON, err := json.Marshal(bands)
-		if err != nil {
-			fmt.Printf("Failed to marshal bands: %v\n", err)
-		}
 
-		err = writeToMysql(bandsJSON)
+		err := writeToMysql(bands)
 		if err != nil {
 			fmt.Printf("Failed to write to MySQL: %v\n", err)
 		}
@@ -86,7 +81,7 @@ func main() {
 
 }
 
-func writeToMysql(bandsJSON []byte) error {
+func writeToMysql(bands []models.Band) error {
 	// Load the CA certificate
 	rootCertPool := x509.NewCertPool()
 
@@ -129,13 +124,6 @@ func writeToMysql(bandsJSON []byte) error {
 		return fmt.Errorf("failed to open MySQL connection: %v", err)
 	}
 	defer db.Close()
-
-	// Parse the JSON data
-	var bands []models.Band
-	err = json.Unmarshal(bandsJSON, &bands)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal bands JSON: %v", err)
-	}
 
 	// Insert the data into the bands table
 	for _, band := range bands {
