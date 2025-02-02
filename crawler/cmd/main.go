@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -30,14 +31,16 @@ func main() {
 
 	updateMode := os.Getenv("UPDATE_MODE") == "true"
 
+	ids, err := metaldb.LoadBandIDs(db)
+	if err != nil {
+		log.Fatalf("Error loading band IDs: %v", err)
+	}
+
 	for i := 0; i < batchCount; i++ {
 		bands := []models.Band{}
 		for j := currentIndex; j <= currentIndex+batchSize; j++ {
 			if !updateMode {
-				exists, err := metaldb.BandExists(db, j)
-				if err != nil {
-					fmt.Printf("Failed to check if band exists: %v\n", err)
-				}
+				exists := metaldb.BandExists(ids, j)
 				if exists {
 					fmt.Printf("Band with ID %d already exists\n", j)
 					continue

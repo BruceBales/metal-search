@@ -87,13 +87,29 @@ func WriteToMysql(db *sql.DB, bands []models.Band) error {
 	return nil
 }
 
-// Check if a band exists by ID
-func BandExists(db *sql.DB, bandID int) (bool, error) {
-	var exists bool
-	query := "SELECT EXISTS(SELECT 1 FROM bands WHERE id = ?)"
-	err := db.QueryRow(query, bandID).Scan(&exists)
+func BandExists(ids map[int]struct{}, bandID int) bool {
+	_, exists := ids[bandID]
+	return exists
+}
+
+func LoadBandIDs(db *sql.DB) (map[int]struct{}, error) {
+	ids := make(map[int]struct{})
+	rows, err := db.Query("SELECT id FROM bands")
 	if err != nil {
-		return false, fmt.Errorf("failed to check if band exists: %v", err)
+		return nil, fmt.Errorf("failed to load band IDs: %v", err)
 	}
-	return exists, nil
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("failed to scan band ID: %v", err)
+		}
+		ids[id] = struct{}{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate over band IDs: %v", err)
+	}
+
+	return ids, nil
 }
