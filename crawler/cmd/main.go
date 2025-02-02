@@ -66,6 +66,10 @@ func main() {
 			if spotifyURL != "" {
 				band.SpotifyLink = spotifyURL
 			}
+			if name == "" {
+				fmt.Printf("No name found for band with ID %d\n", j)
+				continue
+			}
 			band.ID = j
 			band.Name = name
 			band.Genre = genre
