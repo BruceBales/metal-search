@@ -60,9 +60,7 @@ func main() {
 
 			spotifyURL, err := helpers.GetSpotifyURL(fmt.Sprintf("https://www.metal-archives.com/link/ajax-list/type/band/id/%d", j))
 			if err != nil {
-				if err == fmt.Errorf("error: status code 404") {
-					continue
-				} else {
+				if err != fmt.Errorf("error: status code 404") {
 					fmt.Printf("Failed to get Spotify URL: %v\n", err)
 				}
 			}
