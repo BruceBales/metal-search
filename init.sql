@@ -25,6 +25,15 @@ CREATE TABLE albums (
     FOREIGN KEY (band_id) REFERENCES bands(id) ON DELETE CASCADE
 );
 
+CREATE TABLE "hits" (
+  "id" int NOT NULL AUTO_INCREMENT,
+  "timestamp" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "ip_address" varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  "path" varchar(255) DEFAULT NULL,
+  "params" varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  PRIMARY KEY ("id")
+)
+
 -- Insert sample data into bands table
 INSERT INTO bands (name, country, location, formed_in, status, years_active, genre, themes, label, band_cover, spotify_link)
 VALUES

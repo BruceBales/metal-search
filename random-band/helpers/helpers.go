@@ -3,6 +3,7 @@ package helpers
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 )
 
 func GetDistinctValues(db *sql.DB, column string) ([]string, error) {
@@ -26,4 +27,22 @@ func GetDistinctValues(db *sql.DB, column string) ([]string, error) {
 	}
 
 	return values, nil
+}
+
+func ReportHit(db *sql.DB, r *http.Request) error {
+	ipAddress := r.RemoteAddr
+	path := r.URL.Path
+	params := r.URL.RawQuery
+
+	query := `
+        INSERT INTO hits (ip_address, path, params)
+        VALUES (?, ?, ?)
+    `
+
+	_, err := db.Exec(query, ipAddress, path, params)
+	if err != nil {
+		return fmt.Errorf("failed to record hit: %v", err)
+	}
+
+	return nil
 }

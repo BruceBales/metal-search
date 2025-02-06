@@ -17,6 +17,7 @@ import (
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {
+
 	// Read environment variables
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
@@ -62,6 +63,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
+
+	err = helpers.ReportHit(db, r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to record hit: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	// Query for distinct countries
 	countries, err := helpers.GetDistinctValues(db, "country")
@@ -180,6 +187,12 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
+
+	err = helpers.ReportHit(db, r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to record hit: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	// Get parameters from the request
 	genre := r.URL.Query().Get("genre")
