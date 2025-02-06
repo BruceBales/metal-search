@@ -143,6 +143,46 @@ func Home(w http.ResponseWriter, r *http.Request) {
     `)
 }
 
+func Poser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(666)
+	fmt.Fprintln(w, `
+	<html>
+		<style>
+			body {
+				background-color: black;
+				color: lightgrey;
+				font-family: Arial, sans-serif;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				margin: 0;
+			}
+			.container {
+				text-align: left;
+				width: 400px; /* Fixed width for the container */
+			}
+			.links {
+				display: flex;
+				justify-content: space-between;
+			}
+
+			a {
+				color: grey;
+			}
+		</style>
+	<head><title>666 Posers Not Allowed</title></head>
+	<body>
+	<container>
+		HTML Code 666
+		<br>
+		<h1>Posers Not Allowed</h1>
+		</container>
+	</body>
+	</html>
+	`)
+}
+
 func RandomBand(w http.ResponseWriter, r *http.Request) {
 	// Read environment variables
 	dbUser := os.Getenv("DB_USER")

@@ -12,6 +12,7 @@ import (
 func main() {
 	http.HandleFunc("/", handlers.Home)
 	http.HandleFunc("/randomBand", handlers.RandomBand)
+	http.HandleFunc("/poser", handlers.Poser)
 	if os.Getenv("TLS_ENABLED") == "true" {
 		go func() {
 			log.Fatal(http.ListenAndServe(":80", nil))

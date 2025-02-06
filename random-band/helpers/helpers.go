@@ -34,12 +34,14 @@ func ReportHit(db *sql.DB, r *http.Request) error {
 	path := r.URL.Path
 	params := r.URL.RawQuery
 
+	userAgent := r.UserAgent()
+
 	query := `
-        INSERT INTO hits (ip_address, path, params)
-        VALUES (?, ?, ?)
+        INSERT INTO hits (ip_address, user_agent, path, params)
+        VALUES (?, ?, ?, ?)
     `
 
-	_, err := db.Exec(query, ipAddress, path, params)
+	_, err := db.Exec(query, ipAddress, userAgent, path, params)
 	if err != nil {
 		return fmt.Errorf("failed to record hit: %v", err)
 	}
