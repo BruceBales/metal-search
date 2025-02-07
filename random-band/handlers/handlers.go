@@ -124,6 +124,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 					<option value="%%Folk Metal%%">Folk Metal</option>
                     <option value="%%Power Metal%%">Power Metal</option>
                     <option value="%%Doom Metal%%">Doom Metal</option>
+					<option value="Metalcore">Metalcore</option>
                     <!-- Add more genres as needed -->
                 </select><br><br>
                 <label for="country">Country:</label>
@@ -237,6 +238,12 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
 	// Get parameters from the request
 	genre := r.URL.Query().Get("genre")
 	country := r.URL.Query().Get("country")
+
+	if genre == "Metalcore" {
+		// http.Redirect(w, r, "/poser", 666)
+		Poser(w, r)
+		return
+	}
 
 	args := []any{}
 
