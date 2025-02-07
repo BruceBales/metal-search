@@ -174,7 +174,7 @@ func Poser(w http.ResponseWriter, r *http.Request) {
 	<head><title>666 Posers Not Allowed</title></head>
 	<body>
 	<container>
-		HTML Code 666
+		HTTP Error Code 666
 		<br>
 		<h1>Posers Not Allowed</h1>
 		</container>
