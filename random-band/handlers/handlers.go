@@ -240,7 +240,6 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
 	country := r.URL.Query().Get("country")
 
 	if genre == "Metalcore" {
-		// http.Redirect(w, r, "/poser", 666)
 		Poser(w, r)
 		return
 	}
