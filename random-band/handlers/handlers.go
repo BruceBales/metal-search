@@ -33,28 +33,37 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath := filepath.Join(usr.HomeDir, "metal-cert.crt")
-	pem, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to read CA cert file: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
-		http.Error(w, "Failed to append CA cert to pool", http.StatusInternalServerError)
-		return
-	}
+	tlsEnabled := os.Getenv("TLS_ENABLED") == "true"
 
-	// Register the TLS configuration
-	err = mysql.RegisterTLSConfig("custom", &tls.Config{
-		RootCAs: rootCertPool,
-	})
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to register TLS config: %v", err), http.StatusInternalServerError)
-		return
+	if tlsEnabled {
+		filePath := filepath.Join(usr.HomeDir, "metal-cert.crt")
+		pem, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to read CA cert file: %v", err), http.StatusInternalServerError)
+			return
+		}
+		if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+			http.Error(w, "Failed to append CA cert to pool", http.StatusInternalServerError)
+			return
+		}
+
+		// Register the TLS configuration
+		err = mysql.RegisterTLSConfig("custom", &tls.Config{
+			RootCAs: rootCertPool,
+		})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to register TLS config: %v", err), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Construct the DSN
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb?tls=custom", dbUser, dbPassword, dbHost, dbPort)
+	var dsn string
+	if tlsEnabled {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb?tls=custom", dbUser, dbPassword, dbHost, dbPort)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb", dbUser, dbPassword, dbHost, dbPort)
+	}
 
 	// Open a connection to the MySQL database
 	db, err := sql.Open("mysql", dsn)
@@ -200,26 +209,35 @@ func RandomBand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath := filepath.Join(usr.HomeDir, "metal-cert.crt")
+	tlsEnabled := os.Getenv("TLS_ENABLED") == "true"
 
-	pem, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		fmt.Printf("failed to read CA cert file: %v", err)
-	}
-	if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
-		fmt.Printf("failed to append CA cert to pool")
-	}
+	if tlsEnabled {
+		filePath := filepath.Join(usr.HomeDir, "metal-cert.crt")
 
-	// Register the TLS configuration
-	err = mysql.RegisterTLSConfig("custom", &tls.Config{
-		RootCAs: rootCertPool,
-	})
-	if err != nil {
-		log.Fatalf("Failed to register TLS config: %v", err)
+		pem, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			fmt.Printf("failed to read CA cert file: %v", err)
+		}
+		if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+			fmt.Printf("failed to append CA cert to pool")
+		}
+
+		// Register the TLS configuration
+		err = mysql.RegisterTLSConfig("custom", &tls.Config{
+			RootCAs: rootCertPool,
+		})
+		if err != nil {
+			log.Fatalf("Failed to register TLS config: %v", err)
+		}
 	}
 
 	// Construct the DSN
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb?tls=custom", dbUser, dbPassword, dbHost, dbPort)
+	var dsn string
+	if tlsEnabled {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb?tls=custom", dbUser, dbPassword, dbHost, dbPort)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/defaultdb", dbUser, dbPassword, dbHost, dbPort)
+	}
 
 	// Open a connection to the MySQL database
 	db, err := sql.Open("mysql", dsn)

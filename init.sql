@@ -25,14 +25,15 @@ CREATE TABLE albums (
     FOREIGN KEY (band_id) REFERENCES bands(id) ON DELETE CASCADE
 );
 
-CREATE TABLE "hits" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "timestamp" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "ip_address" varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  "path" varchar(255) DEFAULT NULL,
-  "params" varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY ("id")
-)
+CREATE TABLE `hits` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ip_address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `path` varchar(255) DEFAULT NULL,
+  `params` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
 
 -- Insert sample data into bands table
 INSERT INTO bands (name, country, location, formed_in, status, years_active, genre, themes, label, band_cover, spotify_link)
@@ -44,3 +45,4 @@ INSERT INTO albums (band_id, name, type, year, link)
 VALUES
 (1, 'Tales from the Thousand Lakes', 'Album', 1994, 'https://example.com/tales.jpg'),
 (1, 'Queen of Time', 'Album', 2018, 'https://example.com/queen.jpg');
+

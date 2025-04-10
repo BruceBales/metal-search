@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,8 @@ func main() {
 		}()
 		log.Fatal(http.ListenAndServeTLS(":443", os.Getenv("TLS_CERT_PATH"), os.Getenv("TLS_KEY_PATH"), nil))
 	} else {
+		fmt.Println("TLS is disabled")
+		fmt.Println("Listening on port 80")
 		log.Fatal(http.ListenAndServe(":80", nil))
 	}
 }
